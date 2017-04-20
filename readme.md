@@ -3,7 +3,7 @@
 This is a fork of FreeRTOS providing support for mips32 compliant cores from
 mip32r2 to mips32r6 and includes support for the microMIPS ISA as well.
 
-The freertos-trunk branch tracks the freertos svn repo. mips support is added on
+The freertos-trunk branch tracks the freertos svn repo. MIPS support is added on
 the mips branch.
 
 Requirements:
@@ -20,11 +20,28 @@ or higher.
 
 Features:
 * Uses FreeRTOS V9.0.0
-* Demos for both CI40 and Xilinx NEXYS4DDR fpga board
+* Generic Demo supporting all major architecture features
+* Specific LwIP Demos for both CI40 and Xilinx NEXYS4DDR FPGA boards
 
 
-NB. The Xilinx NEXYS4DDR fpga board must be programmed with a suitable bitfile
-supporting a mips m14kc processor.
+## Generic Demo
+
+The generic demo is highly configurable and thus is configured via a config
+file, see FreeRTOS/Demo/MIPS32_GCC/configs (any new configs added must be stored
+here).
+
+Building the demo:
+
+```
+cd FreeRTOS/Demo/MIPS32_GCC
+make defaultconfig
+make
+```
+
+## LWIP Based Demo
+
+Note: The Xilinx NEXYS4DDR FPGA board must be programmed with a suitable bitfile
+supporting a MIPS m14kc processor.
 
 Building the Demo for the CI40 target:
 ```
@@ -32,7 +49,7 @@ cd FreeRTOS/Demo/lwIP_MIPS_GCC/CI40/
 ARCH=interaptiv INTS=eic GIC_BASE_ADDRESS=0x1BDC0000 make
 ```
 
-Building the Demo for the fpga target:
+Building the Demo for the mipsFPGA target:
 ```
 cd FreeRTOS/Demo/lwIP_MIPS_GCC/mipsFPGA/
 ARCH=m14kc make
