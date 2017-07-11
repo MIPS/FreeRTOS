@@ -73,8 +73,6 @@
 #include "port_timer.h"
 #include "int_handler.h"
 
-static TickType_t cyclesPerTick = 0;
-
 static void inline prvSetNextTick ( void )
 {
 	mips_setcompare( mips_getcompare() + ( configTIMER_CLOCK_HZ / configTICK_RATE_HZ ) );
@@ -97,8 +95,6 @@ __attribute__(( weak )) void vApplicationSetupTickTimerInterrupt( void )
 
 	/* Set Compare to Count as a starting point */
 	mips_setcompare( mips_getcount() );
-
-	cyclesPerTick = prvCyclesPerTick();
 
 	/* Set the interrupt to fire 1ms from now */
 	prvSetNextTick( );
