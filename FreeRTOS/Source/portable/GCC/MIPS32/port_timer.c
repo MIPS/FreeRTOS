@@ -75,70 +75,15 @@
 
 static TickType_t cyclesPerTick = 0;
 
-static void prvSetNextTick ( uint32_t ms )
+static void inline prvSetNextTick ( void )
 {
-TickType_t xJiffies;
-TickType_t xJResult;
-TickType_t xJTest;
-reg_t count;
-reg_t compare;
-
-	/* Convert from milliseconds to timer ticks */
-	xJiffies = ms * ( ( TickType_t ) configTICK_RATE_HZ / 1000UL ) * cyclesPerTick;
-
-	/* Check that we have leeway to differentiate miss from wrap */
-	xJTest = ( xJiffies & 0xc0000000 );
-	xJResult = xJiffies << 2;
-
-	/* Get the last trigger cycle count */
-	compare = mips_getcompare();
-
-	/* Make sure we've not missed the deadline */
-	for( ;; )
-	{
-		compare += xJiffies;
-		mips_setcompare( compare );
-		count = mips_getcount();
-		if( compare < count )
-		{
-			/* When xJTest != 0, there's not enough leeway to differentiate a
-			tick miss from a wrap, so we assume we've wrapped. Similarly, when
-			xJResult is less than count - compare, we have wrapped. */
-			if( ( xJTest ) || ( ( count - compare ) > ( xJResult ) ) )
-			{
-				break;
-			}
-			else
-			{
-				/* We have missed a timer tick */
-				continue;
-			}
-		}
-		else
-		{
-			/* We've not missed a tick, nor have we wrapped */
-			break;
-		}
-	}
-}
-
-/* Determine the number of cycles one instruction takes. We do this as it may
-be the case that the Count tick rate may not be 1 tick per instruction. */
-static inline TickType_t prvCyclesPerTick( void )
-{
-	uint32_t x, y;
-
-	asm volatile( "mfc0 %0, $9, 0\n\t"
-				"mfc0 %1, $9, 0\n\t" : "=r"( x ), "=r"( y ));
-	y -= x;
-
-	return (y ? y : 1);
+	mips_setcompare( mips_getcompare() + ( configTIMER_CLOCK_HZ / configTICK_RATE_HZ ) );
 }
 
 /* Clear the timer interrupt */
 inline void portClearTickTimerInterrupt( void )
 {
-	prvSetNextTick( 1 );
+	prvSetNextTick( );
 }
 
 extern void vPortTickInterruptHandler( void );
@@ -156,5 +101,5 @@ __attribute__(( weak )) void vApplicationSetupTickTimerInterrupt( void )
 	cyclesPerTick = prvCyclesPerTick();
 
 	/* Set the interrupt to fire 1ms from now */
-	prvSetNextTick( 1 );
+	prvSetNextTick( );
 }
