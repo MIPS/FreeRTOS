@@ -71,6 +71,12 @@ C0_WATCHHI7_VALUE?=0x00000000
 # CPU clock Frequency in HZ
 CPU_CLOCK_HZ?=400000000
 
+#timer clock
+TICK_RATE_HZ?=1000
+TIMER_CLOCK_HZ?=(CPU_CLOCK_HZ / 2UL)
+
+
+
 # Default task stack size in bytes
 STACK_SIZE?=512
 
