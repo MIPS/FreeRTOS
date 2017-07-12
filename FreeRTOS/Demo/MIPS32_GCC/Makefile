@@ -2,7 +2,7 @@
 #
 CONFIG_FILE=.config
 CONFIGS_DIR=configs
-$(shell if [ ! -e $(CONFIG_FILE) ]; then \
+$(@if [ ! -e $(CONFIG_FILE) ]; then \
 		touch $(CONFIG_FILE); \
 		make defaultconfig > $(CONFIG_FILE); \
 		fi)
@@ -71,6 +71,11 @@ CFLAGS += -march=$(ARCH) -g $(INCLUDE)
 
 # Customise FreeRTOS settings
 CFLAGS += -DCONFIG_CPU_CLOCK_HZ=$(CPU_CLOCK_HZ)
+
+CFLAGS += -DCONFIG_TICK_RATE_HZ=$(TICK_RATE_HZ)
+CFLAGS += -DCONFIG_TIMER_CLOCK_HZ=$(TIMER_CLOCK_HZ)
+
+
 CFLAGS += -DCONFIG_STACK_SIZE=$(STACK_SIZE)
 CFLAGS += -DCONFIG_HEAP_SIZE=$(HEAP_SIZE)
 CFLAGS += -DCONFIG_MAX_PRIORITIES=$(MAX_PRIORITIES)

@@ -81,7 +81,8 @@
 #define configUSE_PREEMPTION                        1
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION     1
 #define configCPU_CLOCK_HZ                          ( CONFIG_CPU_CLOCK_HZ )
-#define configTICK_RATE_HZ                          ( ( TickType_t ) configCPU_CLOCK_HZ / 2 )
+#define configTICK_RATE_HZ                          ( CONFIG_TICK_RATE_HZ )
+#define configTIMER_CLOCK_HZ                        ( CONFIG_TIMER_CLOCK_HZ )
 #define configUSE_16_BIT_TICKS                      0
 #define configMAX_PRIORITIES                        ( CONFIG_MAX_PRIORITIES )
 #define configMINIMAL_STACK_SIZE                    ( CONFIG_STACK_SIZE/2 )
