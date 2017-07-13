@@ -2,7 +2,7 @@
 #
 CONFIG_FILE=.config
 CONFIGS_DIR=configs
-$(@if [ ! -e $(CONFIG_FILE) ]; then \
+$(shell if [ ! -e $(CONFIG_FILE) ]; then \
 		touch $(CONFIG_FILE); \
 		make defaultconfig > $(CONFIG_FILE); \
 		fi)
@@ -61,7 +61,8 @@ CFLAGS +=-DENABLE_TRACE
 endif
 
 MIPS32_SRC_DIR=../../Source/portable/GCC/MIPS32
-MIPS_ELF_ROOT := $(shell dirname `which mips-mti-elf-gcc`)/..
+MIPS_ELF_ROOT := $(shell dirname `locate -n 1 $(GCC)`)
+PATH=/usr/bin:/bin:$(MIPS_ELF_ROOT)
 
 # Include paths
 INCLUDE = -I. -I./include -I../../Source/include -I$(MIPS32_SRC_DIR) -I../Common/include
