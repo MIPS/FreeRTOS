@@ -1,0 +1,12 @@
+*.elf
+*.map
+build
+cscope.*
+tags
+.config
+*.zip
+ReleaseNotes.txt
+.tabs
+*.patch
+reset_predef.S
+*.bin

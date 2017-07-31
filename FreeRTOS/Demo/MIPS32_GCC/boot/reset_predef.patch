@@ -1,0 +1,21 @@
+--- boot/reset_predef.S.old	2015-10-16 11:54:35.983099541 +0100
++++ boot/reset_predef.S	2015-10-16 14:42:45.465071042 +0100
+@@ -86,11 +86,18 @@
+     # Since the code is executing from KSEG0 It needs to do a jump to KSEG1 change K0
+     # and jump back to KSEG0
+ 
++    mfc0  a2, C0_CONFIG5
++    ext   a1, a2, CFG5_K_SHIFT, 1
++    beqz  a1, 1f
++    ext   a1, a2, CFG5_EVA_SHIFT, 1
++    bnez  a1, 2f
++1:
+     lui	  a2, %hi(__change_k0_cca)
+     addiu a2, a2, %lo(__change_k0_cca)
+     li	  a1, 0xf
+     ins	  a2, a1, 29, 1		      # changed to KSEG1 address by setting bit 29
+     jalr  a2
++2:
+ #endif
+ 
+ #if (defined(SLINE_ENC) && SLINE_ENC != 0) || (defined(MEM_MAPPED_L2C) && MEM_MAPPED_L2C != 0)
