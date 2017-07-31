@@ -87,6 +87,7 @@
 #define configMAX_API_CALL_INTERRUPT_PRIORITY     	0x0
 #define configKERNEL_INTERRUPT_PRIORITY             0x01
 #define configUSE_MUTEXES							1
+#define configUSER_IPL_BITS				( 0x3F << 10 )
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES       0

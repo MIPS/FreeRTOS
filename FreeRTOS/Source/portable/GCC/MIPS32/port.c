@@ -184,7 +184,7 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 
 	/* fill up some initial values for us to kick in */
 	*( pxTopOfStack + CTX_CAUSE/4 ) = (StackType_t) mips_getcr();
-	*( pxTopOfStack + CTX_STATUS/4 ) = (StackType_t) portINITIAL_SR | ( EIC || GIC || FPGA ? portALL_IPL_BITS : SR_TIMER_IRQ );
+	*( pxTopOfStack + CTX_STATUS/4 ) = (StackType_t) portINITIAL_SR | configUSER_IPL_BITS | SR_TIMER_IRQ;
 	*( pxTopOfStack + CTX_EPC/4 ) = (StackType_t) pxCode;
 	*( pxTopOfStack + CTX_RA/4 ) = (StackType_t) portTASK_RETURN_ADDRESS;
 	*( pxTopOfStack + CTX_A0/4 ) = (StackType_t) pvParameters; /* Parameters to pass in. */
