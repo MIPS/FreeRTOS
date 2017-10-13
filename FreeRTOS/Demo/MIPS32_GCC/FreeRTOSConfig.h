@@ -104,7 +104,7 @@
 #define configMAX_API_CALL_INTERRUPT_PRIORITY       0x03
 
 /* Prevent assert code from being used in assembly files */
-#ifndef __LANGUAGE_ASSEMBLY
+#ifndef __ASSEMBLER__
 	void vAssertCalled( const char *pcFileName, unsigned long ulLine );
 	#define configASSERT( x )						\
 		do {										\
