@@ -131,9 +131,8 @@ static void prvTaskExitError( void );
 
 /*-----------------------------------------------------------*/
 
-/* Records the interrupt nesting depth.  This is initialised to one as it is
-decremented to 0 when the first task starts. */
-volatile UBaseType_t uxInterruptNesting = 0x01;
+/* Records the interrupt nesting depth. - unused currently as no int stack */
+volatile UBaseType_t uxInterruptNesting = 0x0;
 
 /* Stores the task stack pointer when a switch is made to use the system stack. */
 UBaseType_t uxSavedTaskStackPointer = 0;
