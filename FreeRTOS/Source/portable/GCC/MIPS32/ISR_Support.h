@@ -87,7 +87,7 @@ As we are using Count/Compare as our timer, this fires on Status(HW5). */
 	sw          k1, CTX_K1(sp)
 
 	/* k1 is used as the frame pointer. */
-	add         k1, zero, sp
+	addu         k1, zero, sp
 
 	/* Save the context into the space just created. */
 	_gpctx_save
@@ -132,7 +132,7 @@ As we are using Count/Compare as our timer, this fires on Status(HW5). */
 	sw          k1, CTX_K1(sp)
 
 	/* k0cd is used as the frame pointer. */
-	add         k1, zero, sp
+	addu         k1, zero, sp
 
 	/* Save the context into the space just created. */
 	_gpctx_save
@@ -143,7 +143,7 @@ As we are using Count/Compare as our timer, this fires on Status(HW5). */
 	lw			s7, (s7)
 	sw			k1, (s7)
 
-   	mfc0		s6, C0_CAUSE
+	mfc0		s6, C0_CAUSE
 	ins			s6, zero, 8, 1
 	mtc0		s6, C0_CAUSE
 	ehb
