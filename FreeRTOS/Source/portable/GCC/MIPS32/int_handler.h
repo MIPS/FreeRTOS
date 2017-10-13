@@ -139,6 +139,9 @@ extern volatile uint32_t *GCR;
 extern volatile uint32_t *GIC;
 extern uint32_t EIC;
 
+/* Initialise the GIC */
+void vPortInitGIC( void );
+
 /* Interrupt manipulation */
 extern void pvPortInstallISR( uint32_t, void ( * )( void ) );
 
