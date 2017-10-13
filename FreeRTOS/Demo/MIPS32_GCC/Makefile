@@ -12,9 +12,9 @@ TOP = $(PWD)
 
 # Are we compiling for the Rev 6 ISA
 ifeq ($(ARCH),mips32r6)
-CROSS_COMPILE := mips-img-elf
+CROSS_COMPILE ?= mips-img-elf
 else
-CROSS_COMPILE := mips-mti-elf
+CROSS_COMPILE ?= mips-mti-elf
 endif
 GCC = $(CROSS_COMPILE)-gcc
 
@@ -61,8 +61,7 @@ CFLAGS +=-DENABLE_TRACE
 endif
 
 MIPS32_SRC_DIR=../../Source/portable/GCC/MIPS32
-MIPS_ELF_ROOT := $(shell dirname `locate -n 1 $(GCC)`)
-PATH=/usr/bin:/bin:$(MIPS_ELF_ROOT)
+MIPS_ELF_ROOT ?= $(shell dirname `locate -n 1 $(GCC)`)
 
 # Include paths
 INCLUDE = -I. -I./include -I../../Source/include -I$(MIPS32_SRC_DIR) -I../Common/include
