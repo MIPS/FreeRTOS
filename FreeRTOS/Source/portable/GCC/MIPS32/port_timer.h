@@ -71,6 +71,7 @@ extern "C"
 {
 #endif
 
+void portClearTickTimerInterrupt( void );
 #define configCLEAR_TICK_TIMER_INTERRUPT() portClearTickTimerInterrupt()
 
 extern void portClearTickTimer( void );

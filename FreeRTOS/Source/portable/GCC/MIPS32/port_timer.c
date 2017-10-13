@@ -79,7 +79,7 @@ static void inline prvSetNextTick ( void )
 }
 
 /* Clear the timer interrupt */
-inline void portClearTickTimerInterrupt( void )
+void portClearTickTimerInterrupt( void )
 {
 	prvSetNextTick( );
 }
