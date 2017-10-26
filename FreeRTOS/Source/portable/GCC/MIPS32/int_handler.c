@@ -220,13 +220,6 @@ void vPortClearInterruptMaskFromISR( UBaseType_t uxSavedStatusRegister )
 	mips_setsr( uxSavedStatusRegister );
 }
 
-void _mips_interrupt( void )
-{
-		static uint32_t unhandled_irqs = 0;
-
-		unhandled_irqs++;
-		vPortYieldISR();
-}
 /*-----------------------------------------------------------*/
 
 void vRouteExternalNonEicInterrupt( uint32_t ext_int, uint32_t vpe, uint32_t vpe_int)
