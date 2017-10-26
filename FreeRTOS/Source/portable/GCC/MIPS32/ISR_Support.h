@@ -159,6 +159,19 @@ As we are using Count/Compare as our timer, this fires on Status(HW5). */
 	lw			s0, (s0)
 	lw			a0, (s0)
 
+
+	/*
+	 * The _gpctx_load restore code just wholesale copies the
+	 * status register from the context back to the register loosing
+	 * any changes that may have occured, 'status' is really global state
+	 * You dont enable interrupts on one thread and not another...
+	 * So we just copy the current status value into the saved value
+	 * so nothing changes on the restore
+	 */
+
+	mfc0	k0, C0_STATUS
+	sw		k0, CTX_STATUS(a0)
+
 	_gpctx_load
 
 	/* Restore the stack pointer from the TCB. */
