@@ -3,16 +3,12 @@
 
 TOP = $(PWD)
 
-#ifndef MIPS_INST_ROOT
-#$(error MIPS_INST_ROOT must be set to the root directory of the Codescape MIPS SDK)
-#endif
-
 # Are we compiling for the Rev 6 ISA
 ARCH ?=mips32r6
 ifeq ($(ARCH),mips32r6)
-CROSS_COMPILE := mips-img-elf
+CROSS_COMPILE ?= mips-img-elf
 else
-CROSS_COMPILE := mips-mti-elf
+CROSS_COMPILE ?= mips-mti-elf
 endif
 GCC = $(CROSS_COMPILE)-gcc
 
@@ -32,7 +28,7 @@ DEFINES += -DWITH_DSP
 DSP_FLAGS := -mdspr2
 endif
 
-DEFINES += -DportTICK_PERIOD_MS=1 -DFPGA_TARGET=1
+DEFINES += -DconfigCPU_CLOCK_HZ=50000000 -DconfigTICK_RATE_HZ=100 -DFPGA_TARGET=1 -DLITTLE_ENDIAN=1
 
 ifdef GIC_BASE_ADDRESS
 DEFINES += -DGIC_BASE_ADDRESS=0x1BDC0000
@@ -44,11 +40,11 @@ FLOATS ?=-msoft-float
 # Include paths
 INCLUDE = -I. -I../include -I../../../Source/include -I../../../Source/portable/GCC/MIPS32 -I../../Common/include -I../lwip/src/include 
 INCLUDE += -I./include -I../lwip/src/include/ipv4
+INCLUDE += -I../../../Source/portable/GCC/MIPS32/  -I../common/ -I ../common/include
 
 # Which interrupt mechanism? If it's not declared on the command line, we
 # use the simple baseline case.
 #INTS ?= baseline
-INCLUDE += -I../../../Source/portable/GCC/MIPS32/
 
 ENDIAN ?= -EL
 
@@ -102,13 +98,12 @@ LWIP_SRC := \
 
 
 APP_SRC := \
-	main.c \
-	web.c \
-	mipsFPGA_uart.c \
+	../common/web.c \
+	../common/uart16550.c \
 	mipsFPGA_intc.c \
+	mipsFPGA_eth.c \
 	gpioTask.c \
-	mipsFPGA_eth.c
-
+	main.c 
 
 ifeq ($(TRACE),1)
 DEFINES +=-DENABLE_TRACE
@@ -192,6 +187,12 @@ $(OBJDIR)/%.o : ../lwip/src/api/%.c
 	$(GCC) -c $(CFLAGS) $< -o $@
 
 $(OBJDIR)/%.o : ../lwip/src/netif/%.c
+	$(GCC) -c $(CFLAGS) $< -o $@
+	
+$(OBJDIR)/%.o : ../common/%.c
+	$(GCC) -c $(CFLAGS) $< -o $@
+
+$(OBJDIR)/%.o : ../common/%.S
 	$(GCC) -c $(CFLAGS) $< -o $@
 
 $(OBJDIR)/%.o : %.S

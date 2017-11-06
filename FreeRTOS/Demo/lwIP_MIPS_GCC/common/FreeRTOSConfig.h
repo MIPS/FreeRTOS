@@ -1,7 +1,5 @@
 /*
-    FreeRTOS V4.6.1 - Copyright (C) 2003-2006 Richard Barry.
-    MCF5235 Port - Copyright (C) 2006 Christian Walter.
-
+    FreeRTOS Copyright (C) 2003-2006 Richard Barry.
     This file is part of the FreeRTOS distribution.
 
     FreeRTOS is free software; you can redistribute it and/or modify
@@ -72,9 +70,13 @@
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION     1
 #define configUSE_IDLE_HOOK         				0
 #define configUSE_TICK_HOOK         				0
-#define configCPU_CLOCK_HZ                          ( 400000000UL )
-#define configTICK_RATE_HZ                          ( 1000UL )
-#define configTIMER_CLOCK_HZ                        ( configCPU_CLOCK_HZ / 2UL )
+#ifndef configCPU_CLOCK_HZ /* allow overide from makefile */
+#define configCPU_CLOCK_HZ                          ( 50000000UL )
+#endif
+#define configTIMER_RATE_HZ                         ( ( TickType_t ) configCPU_CLOCK_HZ / 2 )
+#ifndef configTICK_RATE_HZ /* allow overide from makefile */
+#define configTICK_RATE_HZ                          ( 100 )
+#endif
 #define configMAX_PRIORITIES        				( 5 )
 #define configMINIMAL_STACK_SIZE    				( 4096 )
 #define configNORMAL_STACK_SIZE    					( 16384 )

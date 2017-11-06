@@ -1,32 +1,32 @@
 #include "mipsFPGA_intc.h"
 
-void vIntcISR(void);
+extern void vIntcISR(void);
 static MIPSFPGA_INTC_T *global_intc; 
 
 void intc_Isr(void)
 {
-	u32 volatile *fpga_intc = (u32*)global_intc->base_addr;
-	MIPSFPGA_INTC_HANDLER_T *handler;
-	u32 interrupt_bits;
+	uint32_t volatile *regs = (uint32_t*)global_intc->base_addr;
+	HANDLER_DESC_T *handler;
+	uint32_t interrupt_bits;
 	
 	global_intc->interrupt_count++;
-	interrupt_bits = fpga_intc[AIX_INTC_ISR] & global_intc->all_mask;
+	interrupt_bits = regs[AIX_INTC_ISR] & global_intc->all_mask;
 	while (interrupt_bits) {
 		handler = global_intc->handler_list;
 		while (handler) {
 			if (interrupt_bits & handler->mask) {
 				handler->function(handler->parameter);
-				fpga_intc[AIX_INTC_IAR] |= handler->mask;
+				regs[AIX_INTC_IAR] |= handler->mask;
 			}
 			handler = handler->next;
 		}
-		interrupt_bits = fpga_intc[AIX_INTC_ISR] & global_intc->all_mask;
+		interrupt_bits = regs[AIX_INTC_ISR] & global_intc->all_mask;
 	}
 }
 
 static void intc_CreatePool(MIPSFPGA_INTC_T * intc)
 {
-	u32 index;
+	uint32_t index;
 
 	for (index = 0; index < MAX_HANDLERS; index++) {
 		intc->handlers[index].next = intc->handler_pool;
@@ -34,9 +34,9 @@ static void intc_CreatePool(MIPSFPGA_INTC_T * intc)
 	}
 }
 
-static MIPSFPGA_INTC_HANDLER_T *intc_TakeItem(MIPSFPGA_INTC_T * intc)
+static HANDLER_DESC_T *intc_TakeItem(MIPSFPGA_INTC_T * intc)
 {
-	MIPSFPGA_INTC_HANDLER_T *handler;
+	HANDLER_DESC_T *handler;
 
 	handler = intc->handler_pool;
 	intc->handler_pool = intc->handler_pool->next;
@@ -45,7 +45,7 @@ static MIPSFPGA_INTC_HANDLER_T *intc_TakeItem(MIPSFPGA_INTC_T * intc)
 }
 
 static void intc_AddItemToList(MIPSFPGA_INTC_T * intc,
-			       MIPSFPGA_INTC_HANDLER_T * handler)
+		HANDLER_DESC_T * handler)
 {
 	handler->next = intc->handler_list;
 	intc->handler_list = handler;
@@ -53,45 +53,53 @@ static void intc_AddItemToList(MIPSFPGA_INTC_T * intc,
 
 static void intc_InstallIsr(MIPSFPGA_INTC_T * intc)
 {
-	u32 int_num = 6;
-	u32 *fpga_intc = (u32*)intc->base_addr;
+	uint32_t int_num = 6;
+	volatile uint32_t *regs  = (uint32_t*)intc->base_addr;
 
-	fpga_intc[AIX_INTC_IAR] =  0x1F; 
-	fpga_intc[AIX_INTC_IER] =  0x00; 
+	regs[AIX_INTC_IAR] =  0x1F;
+	regs[AIX_INTC_IER] =  0x00;
 	pvPortInstallISR( int_num, vIntcISR);
 	global_intc = intc;
-	fpga_intc[AIX_INTC_MER] = AIX_INTC_ME | AIX_INTC_HIE; 
+	regs[AIX_INTC_MER] = AIX_INTC_ME | AIX_INTC_HIE;
 }
 
-void intc_Init(MIPSFPGA_INTC_T * intc)
+void intc_init(INTC_T * intc)
 {
-	u32 *fpga_intc = (u32 *) intc->base_addr;
+	MIPSFPGA_INTC_T* m_intc = (MIPSFPGA_INTC_T *)intc;
+	volatile uint32_t *regs = (volatile uint32_t *) m_intc->base_addr;
 
-	intc_CreatePool(intc);
-	fpga_intc[AIX_INTC_IAR] = 0x1F;
-	fpga_intc[AIX_INTC_IER] = 0x00;
-	intc_InstallIsr(intc);
-	fpga_intc[AIX_INTC_MER] = AIX_INTC_ME | AIX_INTC_HIE;
-	intc->all_mask = 0;
+	intc_CreatePool(m_intc);
+	regs[AIX_INTC_IAR] = 0x1F;
+	regs[AIX_INTC_IER] = 0x00;
+	intc_InstallIsr(m_intc);
+	regs[AIX_INTC_MER] = AIX_INTC_ME | AIX_INTC_HIE;
+	m_intc->all_mask = 0;
 }
 
-int intc_RegisterHandler(MIPSFPGA_INTC_T * intc, HANDLER_DESC_T * desc)
+int32_t intc_RegisterHandler(INTC_T *intc, HANDLER_DESC_T *desc)
 {
-	MIPSFPGA_INTC_HANDLER_T *handler;
-	u32 *fpga_intc = (u32 *) intc->base_addr;
+	MIPSFPGA_INTC_T *m_intc = (MIPSFPGA_INTC_T *)intc;
+	HANDLER_DESC_T *handler;
+	volatile uint32_t *regs = (volatile uint32_t *) m_intc->base_addr;
 
-	handler = intc_TakeItem(intc);
+	desc->mask = 0x1 << desc->ext_num;
+
+	handler = intc_TakeItem(m_intc);
 	if (!handler)
-		return -1;	//FAIL
+		return -1;
 	handler->mask = desc->mask;
 	handler->function = desc->function;
 	handler->parameter = desc->parameter;
-	intc_AddItemToList(intc, handler);
-	fpga_intc[AIX_INTC_IER] |= desc->mask;
+	intc_AddItemToList(m_intc, handler);
+	regs[AIX_INTC_IER] |= desc->mask;
 
-	intc->all_mask |= desc->mask;
+	m_intc->all_mask |= desc->mask;
 
-	return 0;		//SUCCESS
+	return 0;
 }
 
+void intc_ack(int num)
+{
+	//done in irq handler.
+}
 

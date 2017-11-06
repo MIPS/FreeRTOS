@@ -78,7 +78,6 @@
 static void  mipsFPGA_eth_input(struct netif *netif);
 static err_t mipsFPGA_eth_output(struct netif *netif, struct pbuf *p,
              struct ip_addr *ipaddr);
-void mipsFPGA_eth_Rx(void *parameter);
 
 static void low_level_init(struct netif *netif)
 {
@@ -98,31 +97,17 @@ static void low_level_init(struct netif *netif)
 
 	/* maximum transfer unit */
 	netif->mtu = 1500;
-  
+
 	/* broadcast capability */
 	netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP;
- 
-	/* Do whatever else is needed to initialize interface. */  
+
+	/* initialise hardware */
 	memcpy((void*)&eth->regs[ETH_TX_DATA],netif->hwaddr,6);
 	eth->regs[TX_PING_CNTL] |= MAC_SET;
-
-	handler_info.mask = AIX_INTC_INT1;
-	handler_info.function = mipsFPGA_eth_Rx;
-	handler_info.parameter = netif;
-	intc_RegisterHandler(eth->intc, &handler_info);
 	eth->regs[RX_PING_CNTL] &= ~RX_READY;
 	eth->regs[RX_PING_CNTL] = RX_INT_ENABLE;
 	eth->regs[GIE] |= GIE_ENABLE; 
 }
-
-/*
- * low_level_output():
- *
- * Should do the actual transmission of the packet. The packet is
- * contained in the pbuf that is passed to the function. This pbuf
- * might be chained.
- *
- */
 
 static err_t low_level_output(struct netif *netif, struct pbuf *p)
 {
@@ -134,12 +119,12 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
 	//initiate transfer();
 	while (eth->regs[TX_PING_CNTL] & TX_BUSY)
 		;
-  
+
 #if ETH_PAD_SIZE
 	pbuf_header(p, -ETH_PAD_SIZE);			/* drop the padding word */
 #endif
 
-	ptr = (u8*)&eth->regs[ETH_TX_DATA];
+	ptr = (uint8_t*)&eth->regs[ETH_TX_DATA];
 	for(q = p; q != NULL; q = q->next) {
 		/* Send the data from the pbuf to the interface, one pbuf at a
 			time. The size of the data in each pbuf is kept in the ->len
@@ -165,23 +150,14 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
 	return ERR_OK;
 }
 
-/*
- * low_level_input():
- *
- * Should allocate a pbuf and transfer the bytes of the incoming
- * packet from the interface into the pbuf.
- *
- */
-
 static struct pbuf *low_level_input(struct netif *netif)
 {
 	MIPSFPGA_ETH_T *eth = netif->state;
 	struct pbuf *p, *q;
-	u16_t len;
+	uint16_t len;
 	unsigned char *ptr;
 
-	/* Obtain the size of the packet and put it into the "len"
-     variable. */
+	/* Obtain the size of the packet and put it into the "len" variable. */
 	if (eth->regs[RX_PING_CNTL] & RX_READY) {
 		len = htons(eth->regs[ETH_RX_DATA + 3] & 0xFFFF);
 		if (len > 0x600)
@@ -195,23 +171,19 @@ static struct pbuf *low_level_input(struct netif *netif)
 	len += ETH_PAD_SIZE;						/* allow room for Ethernet padding */
 #endif
 
-  	/* We allocate a pbuf chain of pbufs from the pool. */
+	/* We allocate a pbuf chain of pbufs from the pool. */
 	p = pbuf_alloc(PBUF_RAW, len, PBUF_POOL);
-  
+
 	if (p != NULL) {
 
 #if ETH_PAD_SIZE
 		pbuf_header(p, -ETH_PAD_SIZE);			/* drop the padding word */
 #endif
 
-		ptr = (u8*)&eth->regs[ETH_RX_DATA]; 
+		ptr = (uint8_t*)&eth->regs[ETH_RX_DATA];
 		/* We iterate over the pbuf chain until we have read the entire
 			* packet into the pbuf. */
 		for(q = p; q != NULL; q = q->next) {
-			/* Read enough bytes to fill this pbuf in the chain. The
-			* available data in the pbuf is given by the q->len
-			* variable. */
-			//read data into(q->payload, q->len);
 			memcpy(q->payload,ptr,q->len);
 			ptr += q->len;
 		}
@@ -224,26 +196,17 @@ static struct pbuf *low_level_input(struct netif *netif)
 
 #if LINK_STATS
 		lwip_stats.link.recv++;
-#endif /* LINK_STATS */      
+#endif /* LINK_STATS */
 	} else {
-		//drop packet();
+		/* drop packet(); */
 #if LINK_STATS
 		lwip_stats.link.memerr++;
 		lwip_stats.link.drop++;
-#endif /* LINK_STATS */      
+#endif /* LINK_STATS */
 	}
 
-	return p;  
+	return p;
 }
-
-/*
- * mipsFPGAethif_output():
- *
- * This function is called by the TCP/IP stack when an IP packet
- * should be sent. It calls the function called low_level_output() to
- * do the actual transmission of the packet.
- *
- */
 
 static err_t mipsFPGA_eth_output(struct netif *netif, struct pbuf *p,
       struct ip_addr *ipaddr)
@@ -252,16 +215,6 @@ static err_t mipsFPGA_eth_output(struct netif *netif, struct pbuf *p,
 	return etharp_output(netif, p, ipaddr);
 }
 
-
-/**
- * This function should be called when a packet is ready to be read
- * from the interface. It uses the function low_level_input() that
- * should handle the actual reception of bytes from the network
- * interface. Then the type of the received packet is determined and
- * the appropriate input function is called.
- *
- * @param netif the lwip network interface structure for this mipsFPGAethif
- */
 static void mipsFPGA_eth_input(struct netif *netif)
 {
 	struct eth_hdr *ethhdr;
@@ -304,10 +257,10 @@ static void arp_timer(void *arg)
 	sys_timeout(ARP_TMR_INTERVAL, arp_timer, NULL);
 }
 
-void mipsFPGAethRxTask(void *parameters)
+static void mipsFPGAethRxTask(void *parameters)
 {
-	struct netif *netif = (struct netif *)parameters;
-	MIPSFPGA_ETH_T *eth = netif->state;
+	MIPSFPGA_ETH_T * eth = (MIPSFPGA_ETH_T *)parameters;
+	struct netif *netif = &eth->netif;
 	for (;;) {
 		xSemaphoreTake( eth->rx_Semaphore, 0 );
 		mipsFPGA_eth_input(netif);
@@ -315,16 +268,7 @@ void mipsFPGAethRxTask(void *parameters)
 	}
 }
 
-/*
- * mipsFPGAethif_init():
- *
- * Should be called at the beginning of the program to set up the
- * network interface. It calls the function low_level_init() to do the
- * actual setup of the hardware.
- *
- */
-
-err_t mipsFPGA_eth_init(struct netif *netif)
+static err_t mipsFPGA_eth_init(struct netif *netif)
 {
 	netif->name[0] = IFNAME0;
 	netif->name[1] = IFNAME1;
@@ -336,29 +280,33 @@ err_t mipsFPGA_eth_init(struct netif *netif)
 	return ERR_OK;
 }
 
-void mipsFPGA_eth_Rx(void *parameter)
+static void mipsFPGA_isr(void *parameter)
 {
 	BaseType_t xHigherPriorityTaskWoken;
-	struct netif *netif = (struct netif*)parameter;
-	MIPSFPGA_ETH_T *eth = (MIPSFPGA_ETH_T*) netif->state;
+	MIPSFPGA_ETH_T *eth = (MIPSFPGA_ETH_T*) parameter;
+	struct netif *netif = &eth->netif;
 	eth->rx_count++;
-    xHigherPriorityTaskWoken = pdFALSE;
-    xSemaphoreGiveFromISR( eth->rx_Semaphore, &xHigherPriorityTaskWoken );
-    portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+	xHigherPriorityTaskWoken = pdFALSE;
+	xSemaphoreGiveFromISR( eth->rx_Semaphore, &xHigherPriorityTaskWoken );
+	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 }
 
-void mipsFPGA_ethInit(struct netif *netif, MIPSFPGA_ETH_T * eth)
+void mipsFPGA_ethInit(MIPSFPGA_ETH_T * eth, HANDLER_DESC_T* irq)
 {
 	static struct ip_addr addr, mask, gw;
 	IP4_ADDR(&addr, 0, 0, 0, 0);
 	IP4_ADDR(&mask, 0, 0, 0, 0);
 	IP4_ADDR(&gw, 0, 0, 0, 0);
-	netif_add(netif, &addr, &mask, &gw, eth, mipsFPGA_eth_init,
+	netif_add(&eth->netif, &addr, &mask, &gw, eth, mipsFPGA_eth_init,
 		  tcpip_input);
 	/* make it the default interface */
-	netif_set_default(netif);
+	netif_set_default(&eth->netif);
 
 	eth->rx_Semaphore = xSemaphoreCreateBinary( );
 
-	xTaskCreate( mipsFPGAethRxTask, ( signed char * ) "Eth Rx Task", configNORMAL_STACK_SIZE, netif, tskIDLE_PRIORITY + 1, NULL );
+	irq->function = mipsFPGA_isr;
+	irq->parameter = eth;
+	intc_RegisterHandler((INTC_T*)eth->intc,irq);
+
+	xTaskCreate( mipsFPGAethRxTask, ( signed char * ) "Eth Rx Task", configNORMAL_STACK_SIZE, eth, tskIDLE_PRIORITY + 1, NULL );
 }

@@ -153,6 +153,8 @@ extern void vPortYieldISR( void );
 extern UBaseType_t uxPortSetInterruptMaskFromISR( void );
 extern void vPortClearInterruptMaskFromISR( UBaseType_t );
 extern void vApplicationSetupSoftwareInterrupt( void );
+extern void vLevelTrigExternalNonEicInterrupt( uint32_t ext_int, uint32_t pol);
+extern void vRouteExternalNonEicInterrupt( uint32_t ext_int, uint32_t vpe, uint32_t vpe_int);
 
 #ifdef __mips_dsp
 #define SR_DSP  SR_MX

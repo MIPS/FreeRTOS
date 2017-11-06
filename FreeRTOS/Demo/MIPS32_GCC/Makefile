@@ -61,13 +61,12 @@ CFLAGS +=-DENABLE_TRACE
 endif
 
 MIPS32_SRC_DIR=../../Source/portable/GCC/MIPS32
-MIPS_ELF_ROOT ?= $(shell dirname `locate -n 1 $(GCC)`)
 
 # Include paths
 INCLUDE = -I. -I./include -I../../Source/include -I$(MIPS32_SRC_DIR) -I../Common/include
 
 # C Flags
-CFLAGS += -march=$(ARCH) -g $(INCLUDE)
+CFLAGS += -march=$(ARCH) -g $(INCLUDE) -O3
 
 # Customise FreeRTOS settings
 CFLAGS += -DCONFIG_CPU_CLOCK_HZ=$(CPU_CLOCK_HZ)

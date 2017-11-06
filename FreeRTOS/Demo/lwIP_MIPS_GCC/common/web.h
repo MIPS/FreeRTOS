@@ -53,13 +53,12 @@
 #ifndef BASIC_WEB_SERVER_H
 #define BASIC_WEB_SERVER_H
 
-#include "mipsFPGA_eth.h"
-#include "mipsFPGA_uart.h"
+#include "uart16550.h"
 
 typedef struct {
 	FILE *dbgFile;
-	MIPSFPGA_UART_T *uart;
-	MIPSFPGA_ETH_T *eth;
+	UART16550_T *uart;
+	struct netif *netif;
 } WEB_INFO_T;
 
 
