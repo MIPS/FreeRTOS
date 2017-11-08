@@ -73,7 +73,9 @@
 #include "port_timer.h"
 #include "int_handler.h"
 
-static void inline prvSetNextTick ( void )
+static TickType_t cyclesPerTick = 0;
+
+static void inline prvSetNextTick ( uint32_t ms )
 {
 TickType_t xJiffies;
 TickType_t xJResult;
@@ -145,6 +147,9 @@ extern void vPortTickInterruptHandler( void );
 application that we are being built into. */
 __attribute__(( weak )) void vApplicationSetupTickTimerInterrupt( void )
 {
+	/* count cycles per tick */
+	cyclesPerTick = prvCyclesPerTick();
+
 	/* Install interrupt handler */
 	pvPortInstallISR( TIMER_IRQ, vPortTickInterruptHandler );
 
