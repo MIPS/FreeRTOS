@@ -1,26 +1,8 @@
-#ifndef __MIPSFPGA_UART_H__
-#define __MIPSFPGA_UART_H__
+#ifndef __UART16550_H__
+#define __UART16550_H__
 
 #include <stdio.h>
-#include "types.h"
-
-#define UART1_INT_NUM				24
-#define UART2_INT_NUM				25
-
-#define UART1_BASE_ADDR				0xB8101400
-#define UART2_BASE_ADDR				0xB8101500
-#define UART_BASE_ADDR				UART2_BASE_ADDR
-#define UART_CLK_FREQ				1843200
-#define UART_BAUD_RATE				115200
-#define UART_BAUD_DIVISOR			(UART_CLK_FREQ + (UART_BAUD_RATE * 16)/2)) / (UART_BAUD_RATE * 16)
-
-#define UART_REG_DIV_LO_BYTE		0
-#define UART_REG_DIV_HI_BYTE		1
-#define UART_REG_SETUP				3
-
-#define UART_REG_SETUP_DIV_ACCESS	0x80
-
-#define CR_UART_LSR_RXFER			
+#include "intc.h"
 
 //Reg 1: Interrupt Enable
 #define SER_IER_EDSSI_MASK      0x00000008  //Modem status
@@ -32,7 +14,6 @@
 #define SER_IER_ELSI_SHIFT      2
 #define SER_IER_ETBFI_SHIFT     1
 #define SER_IER_ERBFI_SHIFT     0
-
 
 //Reg 2 (R): Interrupt ID register
 #define SER_IIR_FEN_MASK        0x000000C0  //Fifos enabled
@@ -102,19 +83,20 @@
 #define SER_HIPARITY	5
 #define SER_LOPARITY	7
 
-typedef struct ci40_uart {
-	u32 rbr_thr_dll;
-	u32 ier_dlh;
-	u32 iid_fcr;
-	u32 lcr;
-	u32 mcr;
-	u32 lsr;
-	u32 msr;
-} CI40_UART_REGS_T;
+typedef struct {
+	uint32_t rbr_thr_dll;
+	uint32_t ier_dlh;
+	uint32_t iid_fcr;
+	uint32_t lcr;
+	uint32_t mcr;
+	uint32_t lsr;
+	uint32_t msr;
+} UART16550_REGS_T;
 
 typedef struct {
 	uint32_t base_addr;
-	CI40_UART_REGS_T *regs;
+	UART16550_REGS_T *regs;
+	INTC_T *intc;
 	xQueueHandle TxQueue;
 	xQueueHandle RxQueue;
 	uint32_t baud_clk;
@@ -123,13 +105,13 @@ typedef struct {
 	uint32_t stop_bits;
 	uint32_t parity;
 	SemaphoreHandle_t ReadySemaphore;
-    uint32_t RxInterruptCount;
-} CI40_UART_T;
+	uint32_t RxInterruptCount;
+} UART16550_T;
 
-void CI40_uart_init(CI40_UART_T *uart);
-void uartTask(void *parameters);
-void uartTx(CI40_UART_T *u, u8 *str);
-void uartTxDirect(CI40_UART_T *u, u8 *str);
-u8 uartRx(CI40_UART_T *u);
-FILE *mipsUART_fopen(CI40_UART_T *uart, const char *mode);
+void uart16550_init(UART16550_T *uart, HANDLER_DESC_T* handler_info);
+void uart16550_task(void *parameters);
+void uart16550_tx(UART16550_T *u, uint8_t *str);
+void uart16550_txdirect(UART16550_T *u, uint8_t *str);
+uint8_t uart16550_rx(UART16550_T *u);
+FILE *uart16550_fopen(UART16550_T *uart, const char *mode);
 #endif

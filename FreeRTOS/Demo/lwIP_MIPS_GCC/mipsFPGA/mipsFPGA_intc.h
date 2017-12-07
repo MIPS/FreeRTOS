@@ -1,9 +1,7 @@
 #ifndef __MIPSFPGA_INTC_H__
 #define __MIPSFPGA_INTC_H__
 
-#include "types.h"
-
-#define MIPSFPGA_INTC_ADDR	0xB0200000
+#include "intc.h"
 
 #define AIX_INTC_ISR	0
 #define AIX_INTC_IPR	1
@@ -27,30 +25,12 @@
 #define MAX_HANDLERS	8
 
 typedef struct {
-	u32 mask;
-	void (*function)(void*);
-	void *parameter;
-}HANDLER_DESC_T;
-
-typedef struct handler_struct {
-	s32 mask;
-	void (*function) (void *);
-	void *parameter;
-	struct handler_struct *next;
-} MIPSFPGA_INTC_HANDLER_T;
-
-
-typedef struct {
-	u32 base_addr;
-	MIPSFPGA_INTC_HANDLER_T handlers[MAX_HANDLERS];
-	MIPSFPGA_INTC_HANDLER_T *handler_pool;
-	MIPSFPGA_INTC_HANDLER_T*handler_list;
-	u32 all_mask;
-    u32 interrupt_count;
+	uint32_t base_addr;
+	HANDLER_DESC_T handlers[MAX_HANDLERS];
+	HANDLER_DESC_T *handler_pool;
+	HANDLER_DESC_T *handler_list;
+	uint32_t all_mask;
+	uint32_t interrupt_count;
 } MIPSFPGA_INTC_T;
-
-void intc_Init(MIPSFPGA_INTC_T *intc);
-s32 intc_RegisterHandler(MIPSFPGA_INTC_T *intc, HANDLER_DESC_T *desc);
-
 
 #endif

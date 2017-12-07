@@ -131,9 +131,8 @@ static void prvTaskExitError( void );
 
 /*-----------------------------------------------------------*/
 
-/* Records the interrupt nesting depth.  This is initialised to one as it is
-decremented to 0 when the first task starts. */
-volatile UBaseType_t uxInterruptNesting = 0x01;
+/* Records the interrupt nesting depth. - unused currently as no int stack */
+volatile UBaseType_t uxInterruptNesting = 0x0;
 
 /* Stores the task stack pointer when a switch is made to use the system stack. */
 UBaseType_t uxSavedTaskStackPointer = 0;
@@ -184,7 +183,7 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 
 	/* fill up some initial values for us to kick in */
 	*( pxTopOfStack + CTX_CAUSE/4 ) = (StackType_t) mips_getcr();
-	*( pxTopOfStack + CTX_STATUS/4 ) = (StackType_t) portINITIAL_SR | ( EIC || GIC || FPGA ? portALL_IPL_BITS : SR_TIMER_IRQ );
+	*( pxTopOfStack + CTX_STATUS/4 ) = (StackType_t) (mips32_get_c0(C0_STATUS) | portINITIAL_SR | SR_TIMER_IRQ );
 	*( pxTopOfStack + CTX_EPC/4 ) = (StackType_t) pxCode;
 	*( pxTopOfStack + CTX_RA/4 ) = (StackType_t) portTASK_RETURN_ADDRESS;
 	*( pxTopOfStack + CTX_A0/4 ) = (StackType_t) pvParameters; /* Parameters to pass in. */

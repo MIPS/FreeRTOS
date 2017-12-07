@@ -12,9 +12,9 @@ TOP = $(PWD)
 
 # Are we compiling for the Rev 6 ISA
 ifeq ($(ARCH),mips32r6)
-CROSS_COMPILE := mips-img-elf
+CROSS_COMPILE ?= mips-img-elf
 else
-CROSS_COMPILE := mips-mti-elf
+CROSS_COMPILE ?= mips-mti-elf
 endif
 GCC = $(CROSS_COMPILE)-gcc
 
@@ -61,21 +61,17 @@ CFLAGS +=-DENABLE_TRACE
 endif
 
 MIPS32_SRC_DIR=../../Source/portable/GCC/MIPS32
-MIPS_ELF_ROOT := $(shell dirname `locate -n 1 $(GCC)`)
-PATH=/usr/bin:/bin:$(MIPS_ELF_ROOT)
 
 # Include paths
 INCLUDE = -I. -I./include -I../../Source/include -I$(MIPS32_SRC_DIR) -I../Common/include
 
 # C Flags
-CFLAGS += -march=$(ARCH) -g $(INCLUDE)
+CFLAGS += -march=$(ARCH) -g $(INCLUDE) -O3
 
 # Customise FreeRTOS settings
 CFLAGS += -DCONFIG_CPU_CLOCK_HZ=$(CPU_CLOCK_HZ)
-
 CFLAGS += -DCONFIG_TICK_RATE_HZ=$(TICK_RATE_HZ)
 CFLAGS += -DCONFIG_TIMER_CLOCK_HZ=$(TIMER_CLOCK_HZ)
-
 
 CFLAGS += -DCONFIG_STACK_SIZE=$(STACK_SIZE)
 CFLAGS += -DCONFIG_HEAP_SIZE=$(HEAP_SIZE)

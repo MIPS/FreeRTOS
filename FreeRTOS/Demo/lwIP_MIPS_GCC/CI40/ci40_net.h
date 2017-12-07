@@ -1,7 +1,6 @@
 #ifndef __CI40_NET_H__
 #define __CI40_NET_H__
 
-#include "types.h"
 /* ------------------------ lwIP includes --------------------------------- */
 #include "lwip/err.h"
 #include "lwip/opt.h"
@@ -23,7 +22,6 @@
 #define IP_ADDR 192,168,154,21
 
 #define DANUBE_NET_BASE_ADDR 0xB8140000
-//#define DANUBE_NET_BASE_ADDR 0x18140000
 
 /* Flow Control defines */
 #define FLOW_OFF        0
@@ -241,15 +239,355 @@ enum rtc_control {
 #define GMAC_MMC_TX_INTR   0x108
 #define GMAC_MMC_RX_CSUM_OFFLOAD   0x208
 
+/* GMAC core can compute the checksums in HW. */
+enum rx_frame_status {
+	good_frame = 0,
+	discard_frame = 1,
+	csum_none = 2,
+};
 
-void ci40_net_init(u8 *mac_addr);
-void ci40_net_send(s8 *data, s32 len);
-s32 ci40_net_len(void);
+/* Transmit checksum insertion control */
+enum tdes_csum_insertion {
+	cic_disabled = 0,			/* Checksum Insertion Control */
+	cic_only_ip = 1,			/* Only IP header */
+	cic_no_pseudoheader = 2,	/* IP header but pseudoheader
+								 * is not calculated */
+	cic_full = 3,				/* IP header and pseudoheader */
+};
+
+struct dma_desc {
+	/* Receive descriptor */
+	union {
+		struct {
+			/* RDES0 */
+			uint32_t payload_csum_error:1;
+			uint32_t crc_error:1;
+			uint32_t dribbling:1;
+			uint32_t mii_error:1;
+			uint32_t receive_watchdog:1;
+			uint32_t frame_type:1;
+			uint32_t collision:1;
+			uint32_t ipc_csum_error:1;
+			uint32_t last_descriptor:1;
+			uint32_t first_descriptor:1;
+			uint32_t vlan_tag:1;
+			uint32_t overflow_error:1;
+			uint32_t length_error:1;
+			uint32_t sa_filter_fail:1;
+			uint32_t descriptor_error:1;
+			uint32_t error_summary:1;
+			uint32_t frame_length:14;
+			uint32_t da_filter_fail:1;
+			uint32_t own:1;
+			/* RDES1 */
+			uint32_t buffer1_size:11;
+			uint32_t buffer2_size:11;
+			uint32_t reserved1:2;
+			uint32_t second_address_chained:1;
+			uint32_t end_ring:1;
+			uint32_t reserved2:5;
+			uint32_t disable_ic:1;
+
+		} rx;
+		struct {
+			/* RDES0 */
+			uint32_t rx_mac_addr:1;
+			uint32_t crc_error:1;
+			uint32_t dribbling:1;
+			uint32_t error_gmii:1;
+			uint32_t receive_watchdog:1;
+			uint32_t frame_type:1;
+			uint32_t late_collision:1;
+			uint32_t ipc_csum_error:1;
+			uint32_t last_descriptor:1;
+			uint32_t first_descriptor:1;
+			uint32_t vlan_tag:1;
+			uint32_t overflow_error:1;
+			uint32_t length_error:1;
+			uint32_t sa_filter_fail:1;
+			uint32_t descriptor_error:1;
+			uint32_t error_summary:1;
+			uint32_t frame_length:14;
+			uint32_t da_filter_fail:1;
+			uint32_t own:1;
+			/* RDES1 */
+			uint32_t buffer1_size:13;
+			uint32_t reserved1:1;
+			uint32_t second_address_chained:1;
+			uint32_t end_ring:1;
+			uint32_t buffer2_size:13;
+			uint32_t reserved2:2;
+			uint32_t disable_ic:1;
+		} erx;          /* -- enhanced -- */
+
+		 /* Transmit descriptor */
+		struct {
+			/* TDES0 */
+			uint32_t deferred:1;
+			uint32_t underflow_error:1;
+			uint32_t excessive_deferral:1;
+			uint32_t collision_count:4;
+			uint32_t vlan_frame:1;
+			uint32_t excessive_collisions:1;
+			uint32_t late_collision:1;
+			uint32_t no_carrier:1;
+			uint32_t loss_carrier:1;
+			uint32_t payload_error:1;
+			uint32_t frame_flushed:1;
+			uint32_t jabber_timeout:1;
+			uint32_t error_summary:1;
+			uint32_t ip_header_error:1;
+			uint32_t time_stamp_status:1;
+			uint32_t reserved1:13;
+			uint32_t own:1;
+			/* TDES1 */
+			uint32_t buffer1_size:11;
+			uint32_t buffer2_size:11;
+			uint32_t time_stamp_enable:1;
+			uint32_t disable_padding:1;
+			uint32_t second_address_chained:1;
+			uint32_t end_ring:1;
+			uint32_t crc_disable:1;
+			uint32_t checksum_insertion:2;
+			uint32_t first_segment:1;
+			uint32_t last_segment:1;
+			uint32_t interrupt:1;
+		} tx;
+		struct {
+			/* TDES0 */
+			uint32_t deferred:1;
+			uint32_t underflow_error:1;
+			uint32_t excessive_deferral:1;
+			uint32_t collision_count:4;
+			uint32_t vlan_frame:1;
+			uint32_t excessive_collisions:1;
+			uint32_t late_collision:1;
+			uint32_t no_carrier:1;
+			uint32_t loss_carrier:1;
+			uint32_t payload_error:1;
+			uint32_t frame_flushed:1;
+			uint32_t jabber_timeout:1;
+			uint32_t error_summary:1;
+			uint32_t ip_header_error:1;
+			uint32_t time_stamp_status:1;
+			uint32_t reserved1:2;
+			uint32_t second_address_chain:1;
+			uint32_t end_ring:1;
+			uint32_t checksum_insertion:2;
+			uint32_t reserved2:1;
+			uint32_t time_stamp_enable:1;
+			uint32_t disable_padding:1;
+			uint32_t crc_disable:1;
+			uint32_t first_segment:1;
+			uint32_t last_segment:1;
+			uint32_t interrupt:1;
+			uint32_t own:1;
+			/* TDES1 */
+			uint32_t buffer1_size:13;
+			uint32_t reserved3:3;
+			uint32_t buffer2_size:13;
+			uint32_t reserved4:3;
+		} etx;          /* -- enhanced -- */
+
+		uint64_t all_flags;
+	} des01;
+	unsigned int des2;
+	unsigned int des3;
+};
+/* TX DESC */
+struct tx_dma_desc {
+	struct {
+		/* TDES0 */
+		uint32_t deferred:1;
+		uint32_t underflow_error:1;
+		uint32_t excessive_deferral:1;
+		uint32_t collision_count:4;
+		uint32_t vlan_frame:1;
+		uint32_t excessive_collisions:1;
+		uint32_t late_collision:1;
+		uint32_t no_carrier:1;
+		uint32_t loss_carrier:1;
+		uint32_t payload_error:1;
+		uint32_t frame_flushed:1;
+		uint32_t jabber_timeout:1;
+		uint32_t error_summary:1;
+		uint32_t ip_header_error:1;
+		uint32_t time_stamp_status:1;
+		uint32_t reserved1:13;
+		uint32_t own:1;
+	} des0;
+	struct {
+		/* TDES1 */
+		uint32_t buffer1_size:11;
+		uint32_t buffer2_size:11;
+		uint32_t time_stamp_enable:1;
+		uint32_t disable_padding:1;
+		uint32_t second_address_chained:1;
+		uint32_t end_ring:1;
+		uint32_t crc_disable:1;
+		uint32_t checksum_insertion:2;
+		uint32_t first_segment:1;
+		uint32_t last_segment:1;
+		uint32_t interrupt:1;
+	} des1;
+	unsigned int des2;
+	unsigned int des3;
+};
+
+/* RX DESC */
+struct rx_dma_desc {
+	struct {
+			/* RDES0 */
+			uint32_t payload_csum_error:1;
+			uint32_t crc_error:1;
+			uint32_t dribbling:1;
+			uint32_t mii_error:1;
+			uint32_t receive_watchdog:1;
+			uint32_t frame_type:1;
+			uint32_t collision:1;
+			uint32_t ipc_csum_error:1;
+			uint32_t last_descriptor:1;
+			uint32_t first_descriptor:1;
+			uint32_t vlan_tag:1;
+			uint32_t overflow_error:1;
+			uint32_t length_error:1;
+			uint32_t sa_filter_fail:1;
+			uint32_t descriptor_error:1;
+			uint32_t error_summary:1;
+			uint32_t frame_length:14;
+			uint32_t da_filter_fail:1;
+			uint32_t own:1;
+	} des0;
+	struct {
+			/* RDES1 */
+			uint32_t buffer1_size:11;
+			uint32_t buffer2_size:11;
+			uint32_t reserved1:2;
+			uint32_t second_address_chained:1;
+			uint32_t end_ring:1;
+			uint32_t reserved2:5;
+			uint32_t disable_ic:1;
+	} des1;
+	unsigned int des2;
+	unsigned int des3;
+};
+
+
+struct stmmac_extra_stats {
+	/* Transmit errors */
+	unsigned long tx_underflow;
+	unsigned long tx_carrier;
+	unsigned long tx_losscarrier;
+	unsigned long tx_heartbeat;
+	unsigned long tx_deferred;
+	unsigned long tx_vlan;
+	unsigned long tx_jabber;
+	unsigned long tx_frame_flushed;
+	unsigned long tx_payload_error;
+	unsigned long tx_ip_header_error;
+	/* Receive errors */
+	unsigned long rx_desc;
+	unsigned long rx_partial;
+	unsigned long rx_runt;
+	unsigned long rx_toolong;
+	unsigned long rx_collision;
+	unsigned long rx_crc;
+	unsigned long rx_lenght;
+	unsigned long rx_mii;
+	unsigned long rx_multicast;
+	unsigned long rx_gmac_overflow;
+	unsigned long rx_watchdog;
+	unsigned long da_rx_filter_fail;
+	unsigned long sa_rx_filter_fail;
+	unsigned long rx_missed_cntr;
+	unsigned long rx_overflow_cntr;
+	unsigned long rx_vlan;
+	/* Tx/Rx IRQ errors */
+	unsigned long tx_undeflow_irq;
+	unsigned long tx_process_stopped_irq;
+	unsigned long tx_jabber_irq;
+	unsigned long rx_overflow_irq;
+	unsigned long rx_buf_unav_irq;
+	unsigned long rx_process_stopped_irq;
+	unsigned long rx_watchdog_irq;
+	unsigned long tx_early_irq;
+	unsigned long fatal_bus_error_irq;
+	/* Extra info */
+	unsigned long threshold;
+	unsigned long tx_pkt_n;
+	unsigned long rx_pkt_n;
+	unsigned long poll_n;
+	unsigned long sched_timer_n;
+	unsigned long normal_irq_n;
+};
+
+struct net_device_stats {
+	uint32_t   rx_packets;
+	uint32_t   tx_packets;
+	uint32_t   rx_bytes;
+	uint32_t   tx_bytes;
+	uint32_t   rx_errors;
+	uint32_t   tx_errors;
+	uint32_t   rx_dropped;
+	uint32_t   tx_dropped;
+	uint32_t   multicast;
+	uint32_t   collisions;
+	uint32_t   rx_length_errors;
+	uint32_t   rx_over_errors;
+	uint32_t   rx_crc_errors;
+	uint32_t   rx_frame_errors;
+	uint32_t   rx_fifo_errors;
+	uint32_t   rx_missed_errors;
+	uint32_t   tx_aborted_errors;
+	uint32_t   tx_carrier_errors;
+	uint32_t   tx_fifo_errors;
+	uint32_t   tx_heartbeat_errors;
+	uint32_t   tx_window_errors;
+	uint32_t   rx_compressed;
+	uint32_t   tx_compressed;
+};
+
+#define writel(data,addr) *((volatile uint32_t*)(addr)) = data
+#define readl(addr) *(volatile uint32_t*)(addr)
+
+static inline void stmmac_set_mac_addr(unsigned long ioaddr, uint8_t addr[6],
+	unsigned int high, unsigned int low)
+{
+	unsigned long data;
+
+	data = (addr[5] << 8) | addr[4];
+	writel(data, ioaddr + high);
+	data = (addr[3] << 24) | (addr[2] << 16) | (addr[1] << 8) | addr[0];
+	writel(data, ioaddr + low);
+
+	return;
+}
+
+static inline void stmmac_get_mac_addr(unsigned long ioaddr,
+	unsigned char *addr, unsigned int high,
+	unsigned int low)
+{
+	unsigned int hi_addr, lo_addr;
+
+	/* Read the MAC address from the hardware */
+	hi_addr = readl(ioaddr + high);
+	lo_addr = readl(ioaddr + low);
+
+	/* Extract the MAC address from the high and low words */
+	addr[0] = lo_addr & 0xff;
+	addr[1] = (lo_addr >> 8) & 0xff;
+	addr[2] = (lo_addr >> 16) & 0xff;
+	addr[3] = (lo_addr >> 24) & 0xff;
+	addr[4] = hi_addr & 0xff;
+	addr[5] = (hi_addr >> 8) & 0xff;
+
+	return;
+}
+
+void ci40_net_init(uint8_t *mac_addr);
+void ci40_net_send(int8_t *data, int32_t len);
+int32_t ci40_net_len(void);
 void ci40_net_dump(void);
-void ci40_net_read(s8 *data, s32 len);
-s32 ci40_gmac_dma_init(u32 ioaddr, s32 pbl, u32 dma_tx, u32 dma_rx);
-void ci40_gmac_core_init(u32 ioaddr);
-void ci40_gmac_set_umac_addr(u32 ioaddr, u8 *addr,	u32 reg_n);
-void ci40_gmac_dma_operation_mode(u32 ioaddr, s32 txmode, s32 rxmode);
+void ci40_net_read(int8_t *data, int32_t len);
 void ci40_gmac_dma_clear_int(void);
 #endif

@@ -67,7 +67,6 @@
 #include <regdef.h>
 #include "ISR_Support.h"
 
-	.set	noreorder
 
 	.extern pxCurrentTCB
 	.extern vTaskSwitchContext
@@ -81,7 +80,6 @@
 
 /******************************************************************/
 
-	.set		noreorder
 	.set		noat
 	.ent		vPortTickInterruptHandler
 	.global     vPortTickInterruptHandler
@@ -91,7 +89,6 @@ vPortTickInterruptHandler:
 	portSAVE_CONTEXT
 
 	jal			vPortIncrementTick
-	nop
 
 vPortStartFirstTask:
 	/* Simply restore the context of the highest priority task that has been
@@ -102,7 +99,6 @@ vPortStartFirstTask:
 
 /*******************************************************************/
 
-	.set		noreorder
 	.set		noat
 	.ent		vPortYieldISR
 
@@ -113,7 +109,6 @@ vPortYieldISR:
 	portYIELD_SAVE
 
 	jal		vTaskSwitchContext
-		nop
 
 	portYIELD_RESTORE
 

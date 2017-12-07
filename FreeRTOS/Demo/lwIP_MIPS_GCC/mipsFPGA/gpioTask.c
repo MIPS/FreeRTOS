@@ -6,7 +6,6 @@
 void gpioTask(void *parameters)
 {
 	MIPSFPGA_GPIO_T *gpio = (MIPSFPGA_GPIO_T*)parameters; 
-//	unsigned int *gpio_data = (unsigned int*)GPIO_BASE_ADDR;
 	int dir = 1, data = 0x0100;
 	TickType_t xDelay = 512 / portTICK_PERIOD_MS;
 	unsigned int switches,bit;

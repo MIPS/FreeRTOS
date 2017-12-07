@@ -81,8 +81,8 @@
 #define configUSE_PREEMPTION                        1
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION     1
 #define configCPU_CLOCK_HZ                          ( CONFIG_CPU_CLOCK_HZ )
+#define configTIMER_RATE_HZ                         ( ( TickType_t ) CONFIG_TIMER_CLOCK_HZ )
 #define configTICK_RATE_HZ                          ( CONFIG_TICK_RATE_HZ )
-#define configTIMER_CLOCK_HZ                        ( CONFIG_TIMER_CLOCK_HZ )
 #define configUSE_16_BIT_TICKS                      0
 #define configMAX_PRIORITIES                        ( CONFIG_MAX_PRIORITIES )
 #define configMINIMAL_STACK_SIZE                    ( CONFIG_STACK_SIZE/2 )
@@ -104,7 +104,7 @@
 #define configMAX_API_CALL_INTERRUPT_PRIORITY       0x03
 
 /* Prevent assert code from being used in assembly files */
-#ifndef __LANGUAGE_ASSEMBLY
+#ifndef __ASSEMBLER__
 	void vAssertCalled( const char *pcFileName, unsigned long ulLine );
 	#define configASSERT( x )						\
 		do {										\

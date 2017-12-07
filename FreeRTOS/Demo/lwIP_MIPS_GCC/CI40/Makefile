@@ -3,16 +3,12 @@
 
 TOP = $(PWD)
 
-ifndef MIPS_INST_ROOT
-$(error MIPS_INST_ROOT must be set to the root directory of the Codescape MIPS SDK)
-endif
-
 # Are we compiling for the Rev 6 ISA
-ARCH ?=mips32r6
+ARCH ?=mips32r5
 ifeq ($(ARCH),mips32r6)
-CROSS_COMPILE := mips-img-elf
+CROSS_COMPILE ?= mips-img-elf
 else
-CROSS_COMPILE := mips-mti-elf
+CROSS_COMPILE ?= mips-mti-elf
 endif
 GCC = $(CROSS_COMPILE)-gcc
 
@@ -32,11 +28,11 @@ DEFINES += -DWITH_DSP
 DSP_FLAGS := -mdspr2
 endif
 
-DEFINES += -DportTICK_PERIOD_MS=1000 -DWITH_GIC_VI 
+DEFINES += -DWITH_GIC_VI -DLITTLE_ENDIAN=1
 
-ifdef GIC_BASE_ADDRESS
-DEFINES += -DGIC_BASE_ADDRESS=0x1BDC0000
-endif
+
+DEFINES += -DGIC_BASE_ADDRESS=0x1BDC0000 -DconfigCPU_CLOCK_HZ=400000000
+
 
 ifdef DEMO_DEBUG
 DEFINES += -DDEMO_DEBUG
@@ -49,12 +45,11 @@ FLOATS ?=-msoft-float
 # Include paths
 INCLUDE = -I. -I.. -I../include -I../../../Source/include -I../../../Source/portable/GCC/MIPS32 -I../../Common/include -I../lwip/src/include 
 INCLUDE += -I./include -I../lwip/src/include/ipv4
+INCLUDE += -I../../../Source/portable/GCC/MIPS32/ -I../common/ -I ../common/include
 
+# Which interrupt mechanism? CI40 is VI by default.
+INTS ?= vi
 
-# Which interrupt mechanism? If it's not declared on the command line, we
-# we use the simple baseline case.
-INTS ?= baseline
-INCLUDE += -I../../../Source/portable/GCC/MIPS32/
 
 ENDIAN ?= -EL
 
@@ -107,14 +102,13 @@ LWIP_SRC := \
 	../lwip/sys_arch.c
 
 APP_SRC := \
+	../common/web.c \
+	../common/uart16550.c \
+	../common/vi_intc.c \
 	ci40_net.c \
 	ci40_eth.c \
-	main.c web.c \
-	ci40_uart.c
-
-
-
-
+	main.c
+	
 ifeq ($(TRACE),1)
 DEFINES +=-DENABLE_TRACE
 endif
@@ -122,7 +116,7 @@ endif
 ASMSRC := \
 	../../../Source/portable/GCC/MIPS32/port_asm.S \
 	../../../Source/portable/GCC/MIPS32/$(INTS)/handler.S \
-	ci40_isr.S
+	../common/vi_isr.S
 
 OBJDIR ?= build
 FR_TMPOBJ := $(FR_SRC:.c=.o) $(ASMSRC:.S=.o)
@@ -204,6 +198,12 @@ $(OBJDIR)/%.o : ../lwip/ports/Ci40/%.c
 	$(GCC) -c $(CFLAGS) $< -o $@
 
 $(OBJDIR)/%.o : ../lwip/src/netif/%.c
+	$(GCC) -c $(CFLAGS) $< -o $@
+
+$(OBJDIR)/%.o : ../common/%.c
+	$(GCC) -c $(CFLAGS) $< -o $@
+
+$(OBJDIR)/%.o : ../common/%.S
 	$(GCC) -c $(CFLAGS) $< -o $@
 
 $(OBJDIR)/%.o : %.S

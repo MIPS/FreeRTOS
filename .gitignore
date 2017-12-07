@@ -10,3 +10,6 @@ ReleaseNotes.txt
 *.patch
 reset_predef.S
 *.bin
+*.pyc
+*.a
+*.swp

@@ -40,6 +40,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <mips/hal.h>
 
 /* ------------------------ System architecture includes ----------------------------- */
 #include "arch/sys_arch.h"
@@ -588,6 +589,7 @@ void sys_assert( const char *pcMessage )
 	for (;;);
 }
 
+extern
 void
 sys_debug( const char *const fmt, ... )
 {
@@ -600,7 +602,7 @@ sys_debug( const char *const fmt, ... )
     strcat( buff, "\r" );
     va_end( ap );
 //	uartTxDirect( buff );
-	uartTx( buff );
+	__plog(buff,0);
 //	portENABLE_INTERRUPTS( );
 }
 

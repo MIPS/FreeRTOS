@@ -87,7 +87,7 @@ As we are using Count/Compare as our timer, this fires on Status(HW5). */
 	sw          k1, CTX_K1(sp)
 
 	/* k1 is used as the frame pointer. */
-	add         k1, zero, sp
+	addu         k1, zero, sp
 
 	/* Save the context into the space just created. */
 	_gpctx_save
@@ -132,7 +132,7 @@ As we are using Count/Compare as our timer, this fires on Status(HW5). */
 	sw          k1, CTX_K1(sp)
 
 	/* k0cd is used as the frame pointer. */
-	add         k1, zero, sp
+	addu         k1, zero, sp
 
 	/* Save the context into the space just created. */
 	_gpctx_save
@@ -143,7 +143,7 @@ As we are using Count/Compare as our timer, this fires on Status(HW5). */
 	lw			s7, (s7)
 	sw			k1, (s7)
 
-   	mfc0		s6, C0_CAUSE
+	mfc0		s6, C0_CAUSE
 	ins			s6, zero, 8, 1
 	mtc0		s6, C0_CAUSE
 	ehb
@@ -158,6 +158,19 @@ As we are using Count/Compare as our timer, this fires on Status(HW5). */
 	la			s0, pxCurrentTCB
 	lw			s0, (s0)
 	lw			a0, (s0)
+
+
+	/*
+	 * The _gpctx_load restore code just wholesale copies the
+	 * status register from the context back to the register loosing
+	 * any changes that may have occured, 'status' is really global state
+	 * You dont enable interrupts on one thread and not another...
+	 * So we just copy the current status value into the saved value
+	 * so nothing changes on the restore
+	 */
+
+	mfc0	k0, C0_STATUS
+	sw		k0, CTX_STATUS(a0)
 
 	_gpctx_load
 
