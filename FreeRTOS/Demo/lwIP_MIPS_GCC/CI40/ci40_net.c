@@ -198,7 +198,7 @@ void ci40_net_init(uint8_t *mac_addr)
 	ci40_gmac_dma_operation_mode(DANUBE_NET_BASE_ADDR, SF_DMA_MODE, SF_DMA_MODE);
 	ci40_gmac_core_init(DANUBE_NET_BASE_ADDR);
 
-	// Reset the PHY
+	/* Reset the PHY */
 	writel( 0x8000, DANUBE_NET_BASE_ADDR + GMAC_MII_DATA);
 	writel( 0x3 | (5 << 2), DANUBE_NET_BASE_ADDR + GMAC_MII_ADDR);
 	while (readl(DANUBE_NET_BASE_ADDR + GMAC_MII_ADDR) & 1);
@@ -210,6 +210,7 @@ void ci40_net_init(uint8_t *mac_addr)
 void ci40_net_send(int8_t *data, int32_t len)
 {
 	/* wait for a space */
+	mips_clean_dcache((intptr_t)&dma_tx_desc[current_tx_descriptor],sizeof(struct tx_dma_desc));
 	if (dma_tx_desc[current_tx_descriptor].des0.own) {
 		writel(0xFFFFFFFF,DANUBE_NET_BASE_ADDR + DMA_XMT_POLL_DEMAND);
 		return;
@@ -222,12 +223,14 @@ void ci40_net_send(int8_t *data, int32_t len)
 	if (len > HEADER_LEN) {
 		memcpy(eth_tx_buff[current_tx_descriptor]+HEADER_LEN,(void*)&data[HEADER_LEN],len - HEADER_LEN);
 	}
-	mips_flush_dcache();
+	mips_clean_dcache((intptr_t)eth_tx_buff[current_tx_descriptor],len);
+
 	dma_tx_desc[current_tx_descriptor].des1.buffer1_size = len;
 	dma_tx_desc[current_tx_descriptor].des1.first_segment = 1;
 	dma_tx_desc[current_tx_descriptor].des1.last_segment = 1;
 	dma_tx_desc[current_tx_descriptor].des0.own = 1;
-	mips_flush_dcache();
+	mips_clean_dcache((intptr_t)&dma_tx_desc[current_tx_descriptor],sizeof(struct tx_dma_desc));
+	_mips_sync();
 	writel(0xFFFFFFFF,DANUBE_NET_BASE_ADDR + DMA_XMT_POLL_DEMAND);
 	current_tx_descriptor ++;
 	current_tx_descriptor %= NUM_DMA_DESCS;
@@ -238,11 +241,11 @@ int32_t ci40_net_len(void)
 	int32_t i,len;
 
 	for (i = 0; i < NUM_DMA_DESCS; i ++) {
-		// If filled
-		mips_flush_dcache();
+		/* If filled */
+		mips_clean_dcache((intptr_t)&dma_rx_desc[i],sizeof(struct rx_dma_desc));
 		if (dma_rx_desc[i].des0.own == 0) {
 			len = dma_rx_desc[i].des0.frame_length;
-			// return size
+			/* return size */
 			current_rx_descriptor = i;
 			return len;
 		}
@@ -255,9 +258,11 @@ void ci40_net_read(int8_t *data, int32_t len)
 	int rx = current_rx_descriptor;
 
 	// If filled
+	mips_clean_dcache((intptr_t)&dma_rx_desc[rx],sizeof(struct rx_dma_desc));
 	if (dma_rx_desc[rx].des0.own == 0) {
 		rx_count ++;
-		// copy data to uip_buf
+		/* copy data to rx buffer */
+		mips_clean_dcache((intptr_t)eth_rx_buff[rx],len);
 		memcpy(data, eth_rx_buff[rx], len);
 		memset(&dma_rx_desc[rx].des0,0,sizeof(uint32_t));
 		dma_rx_desc[rx].des0.own = 1;
