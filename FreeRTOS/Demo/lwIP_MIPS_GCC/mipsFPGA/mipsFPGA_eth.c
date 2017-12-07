@@ -187,7 +187,8 @@ static struct pbuf *low_level_input(struct netif *netif)
 			memcpy(q->payload,ptr,q->len);
 			ptr += q->len;
 		}
-		//acknowledge that packet has been read();
+		
+		/* acknowledge that packet has been read */
 		eth->regs[RX_PING_CNTL] &= ~RX_READY;
 
 #if ETH_PAD_SIZE
@@ -198,7 +199,8 @@ static struct pbuf *low_level_input(struct netif *netif)
 		lwip_stats.link.recv++;
 #endif /* LINK_STATS */
 	} else {
-		/* drop packet(); */
+		/* drop the packet */
+		eth->regs[RX_PING_CNTL] &= ~RX_READY;
 #if LINK_STATS
 		lwip_stats.link.memerr++;
 		lwip_stats.link.drop++;
@@ -264,7 +266,6 @@ static void mipsFPGAethRxTask(void *parameters)
 	for (;;) {
 		xSemaphoreTake( eth->rx_Semaphore, 0 );
 		mipsFPGA_eth_input(netif);
-		eth->regs[RX_PING_CNTL] &= ~RX_READY;
 	}
 }
 
