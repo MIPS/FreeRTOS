@@ -37,38 +37,38 @@
 #define  TX_CMDA_ALIGN16	0x01000000
 #define  TX_CMDA_ALIGN32	0x02000000
 #define  TX_CMDA_OFFSET		0x001f0000
-#define  TX_CMDA_FS		0x00002000
-#define  TX_CMDA_LS		0x00001000
+#define  TX_CMDA_FS			0x00002000
+#define  TX_CMDA_LS			0x00001000
 #define  TX_CMDA_BSIZE		0x000007ff
 
 #define SMSC_RXSTAT_FIFO	0x40
 #define SMSC_RXSTAT_FIFO_PEEK	0x44
 #define	 RXSTAT_PKTLEN		0x3FFF0000
-#define	 RXSTAT_ES		0x00008000
+#define	 RXSTAT_ES			0x00008000
 #define	 RXSTAT_BROADCAST	0x00002000
-#define	 RXSTAT_LE		0x00001000
+#define	 RXSTAT_LE			0x00001000
 #define	 RXSTAT_RUNT_ERR	0x00000800
 #define	 RXSTAT_MULTICAST	0x00000400
 #define	 RXSTAT_TOOLONG_ERR	0x00000080
 #define	 RXSTAT_COLL_ERR	0x00000040
 #define	 RXSTAT_FRAMETYPE	0x00000020
 #define	 RXSTAT_WATCHDOG	0x00000010
-#define	 RXSTAT_MII		0x00000008
+#define	 RXSTAT_MII			0x00000008
 #define	 RXSTAT_DRIBBLE		0x00000004
 #define	 RXSTAT_CRC_ERR		0x00000002
 
-#define SMSC_TXSTAT_FIFO	0x48
+#define SMSC_TXSTAT_FIFO		0x48
 #define SMSC_TXSTAT_FIFO_PEEK	0x4c
-#define  TXSTAT_TAG		0xffff0000
-#define  TXSTAT_ES		0x00008000
-#define  TXSTAT_LOC		0x00000800
-#define  TXSTAT_NOC		0x00000400
-#define  TXSTAT_LC		0x00000200
-#define  TXSTAT_EC		0x00000100
+#define  TXSTAT_TAG			0xffff0000
+#define  TXSTAT_ES			0x00008000
+#define  TXSTAT_LOC			0x00000800
+#define  TXSTAT_NOC			0x00000400
+#define  TXSTAT_LC			0x00000200
+#define  TXSTAT_EC			0x00000100
 #define  TXSTAT_CCNT		0x00000078
-#define  TXSTAT_ED		0x00000004
+#define  TXSTAT_ED			0x00000004
 
-#define SMSC_ID_REV		0x50
+#define SMSC_ID_REV			0x50
 #define SMSC_IRQ_CFG		0x54
 #define  IRQ_CFG_DEAS		0xff000000
 #define  IRQ_CFG_DEASCLR	0x00004000
@@ -79,7 +79,7 @@
 #define  IRQ_CFG_IRQTYPE	0x00000001
 
 #define SMSC_INT_STS		0x58
-#define  INT_STS_SW		0x80000000
+#define  INT_STS_SW			0x80000000
 #define  INT_STS_TXSTOP		0x02000000
 #define  INT_STS_RXSTOP		0x01000000
 #define  INT_STS_RXDFH		0x00800000
@@ -103,22 +103,22 @@
 #define  INT_STS_GPIO1		0x00000002
 #define  INT_STS_GPIO0		0x00000001
 
-#define SMSC_INT_EN		0x5c
+#define SMSC_INT_EN			0x5c
 #define SMSC_BYTE_TEST		0x64
 #define SMSC_FIFO_INT		0x68
-#define SMSC_RX_CFG		0x6c
-#define SMSC_TX_CFG		0x70
+#define SMSC_RX_CFG			0x6c
+#define SMSC_TX_CFG			0x70
 #define  TX_CFG_TXSDUMP		0x00008000
 #define  TX_CFG_TXDDUMP		0x00004000
 #define  TX_CFG_TXSAO		0x00000004
 #define  TX_CFG_TXON		0x00000002
 #define  TX_CFG_STOPTX		0x00000001
 
-#define SMSC_HW_CFG		0x74
+#define SMSC_HW_CFG			0x74
 #define  HW_CFG_FPORTEND	0x20000000
 #define  HW_CFG_FSELEND		0x10000000
 #define  HW_CFG_AMDIX		0x01000000
-#define  HW_CFG_MBO		0x00100000
+#define  HW_CFG_MBO			0x00100000
 #define  HW_CFG_TXFIFOSZ	0x000f0000
 #define  HW_CFG_SRSTTO		0x00000002
 #define  HW_CFG_SRST		0x00000001
@@ -244,7 +244,7 @@
 
 /* MAC_MII_ACC */
 #define MII_ACC_WNR		0x00000002
-#define MII_ACC_BUSY		0x00000001
+#define MII_ACC_BUSY	0x00000001
 
 
 static uint32_t RR(LAN9211_T * lan9211, uint32_t r)
@@ -475,7 +475,7 @@ static err_t LAN9211_init(struct netif *netif)
 		return ERR_IF;
 
 	/* Wait for EEPROM accesses to complete */
-	for (tries = 10; tries > 0; --tries) {
+	for (tries = 50; tries > 0; --tries) {
 		if ((RR(lan9211, SMSC_E2P_CMD) & E2P_CMD_BUSY) == 0)
 			break;
 		vTaskDelay(100 / portTICK_PERIOD_MS);
