@@ -33,6 +33,5 @@
 #define __CPU_H__
 
 /* ------------------------ Defines --------------------------------------- */
-#define BYTE_ORDER LITTLE_ENDIAN
 
 #endif

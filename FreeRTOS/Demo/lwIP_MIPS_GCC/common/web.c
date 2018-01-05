@@ -209,7 +209,7 @@ void vBasicWEBServer( void *pvParameters )
 
 	while ( web_info->netif->ip_addr.addr == 0L ) {
 		uint32_t mscnt = 0;
-		sys_msleep(DHCP_FINE_TIMER_MSECS);
+		vTaskDelay(DHCP_FINE_TIMER_MSECS);
 		dhcp_fine_tmr();
 		mscnt += DHCP_FINE_TIMER_MSECS;
 		if (mscnt >= DHCP_COARSE_TIMER_SECS*1000) {

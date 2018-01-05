@@ -153,6 +153,9 @@ __attribute__(( weak )) void vApplicationSetupTickTimerInterrupt( void )
 	/* Install interrupt handler */
 	pvPortInstallISR( TIMER_IRQ, vPortTickInterruptHandler );
 
+	/* Some cores require count to be written to enable the timer interrupt */
+	mips_setcount(0);
+
 	/* Set Compare to Count as a starting point */
 	mips_setcompare( mips_getcount() );
 
