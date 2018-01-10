@@ -1,6 +1,6 @@
 from imgtec import codescape
 import time
-import os
+import os, sys
 
 def setup_and_load(filename):
 	if codescape.environment == 'standalone':
