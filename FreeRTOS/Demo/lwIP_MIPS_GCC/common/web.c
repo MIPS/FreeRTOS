@@ -204,7 +204,7 @@ void vBasicWEBServer( void *pvParameters )
 	netconn_listen( pxHTTPListener );
 
 	/* Specify host name, and start DHCP */
-	netif_set_hostname(web_info->netif, "mips_websever_demo");
+	netif_set_hostname(web_info->netif, "mips_webserver_demo");
 	dhcp_start( web_info->netif );
 
 	while ( web_info->netif->ip_addr.addr == 0L ) {
